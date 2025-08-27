@@ -1,0 +1,100 @@
+# Cursor AI Code Indexing Exclusions
+# This file tells Cursor which files to exclude from code indexing
+
+# Build artifacts and binaries
+build*/
+build-*/
+out/
+bin/
+lib/
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.o
+*.obj
+
+# Package managers and dependencies
+vcpkg/
+vcpkg_installed/
+packages/
+node_modules/
+third_party/TUIO11_CPP/
+
+# Generated files
+*.generated.*
+*.gen.*
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
+
+# Documentation build
+docs/_build/
+docs/build/
+
+# Test output
+test_results/
+coverage/
+*.test
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.orig
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Large data files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wav
+*.mp3
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Configuration files with secrets
+config.json
+settings.json
+*.env
+*.key
+*.pem
+*.p12
+
+# Keep important files for indexing
+!src/
+!include/
+!tests/
+!docs/
+!scripts/
+!CMakeLists.txt
+!README.md
+!PRD.md
+!ARCHITECTURE.md
+!TECH_STACK.md
+!TASKS.md

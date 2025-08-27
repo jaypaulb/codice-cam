@@ -126,9 +126,9 @@ docs/build/
 *.sublime-project
 *.sublime-workspace
 
-# Cursor AI files (keep rules but exclude cache/indexing)
-.cursor/
-!.cursor/rules/
+# Cursor AI files (keep rules and cursorignore but exclude cache/indexing)
 .cursor/cache/
 .cursor/index/
 .cursor/logs/
+!.cursor/rules/
+!.cursor/cursorignore
