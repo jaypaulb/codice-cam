@@ -64,7 +64,7 @@ public:
     void stopCapture();
     cv::Mat getLatestFrame();
     bool isCapturing() const;
-    
+
 private:
     cv::VideoCapture camera;
     std::thread captureThread;
@@ -91,15 +91,15 @@ public:
         float confidence;
         cv::Mat perspective;
     };
-    
+
     std::vector<DetectionResult> detectMarkers(const cv::Mat& frame);
     void setDetectionParameters(const DetectionConfig& config);
-    
+
 private:
     cv::Mat preprocessFrame(const cv::Mat& frame);
     std::vector<cv::Point2f> findMarkerContours(const cv::Mat& binary);
     bool validateMarker(const std::vector<cv::Point2f>& corners);
-    cv::Mat extractMarkerRegion(const cv::Mat& frame, 
+    cv::Mat extractMarkerRegion(const cv::Mat& frame,
                                const std::vector<cv::Point2f>& corners);
 };
 ```
@@ -123,10 +123,10 @@ public:
         cv::Point2f center;
         float angle;
     };
-    
+
     DecodedMarker decodeMarker(const cv::Mat& markerImage);
     bool validateMarkerFormat(const cv::Mat& binaryGrid);
-    
+
 private:
     std::vector<std::vector<bool>> extractGrid(const cv::Mat& image);
     int binaryToDecimal(const std::vector<bool>& bits);
@@ -150,7 +150,7 @@ public:
     void updateMarkers(const std::vector<DecodedMarker>& markers);
     void removeMarker(int sessionId);
     void commitFrame();
-    
+
 private:
     std::unique_ptr<TuioServer> tuioServer;
     std::map<int, TuioObject*> activeMarkers;
@@ -365,6 +365,6 @@ private:
 
 ---
 
-**Document Status**: Draft  
-**Last Updated**: January 2025  
+**Document Status**: Draft
+**Last Updated**: January 2025
 **Review Cycle**: Major architecture changes

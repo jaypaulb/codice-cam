@@ -4,7 +4,7 @@
 ### 1. Core Technology Decisions
 
 #### 1.1 Programming Language: C++
-**Rationale**: 
+**Rationale**:
 - Performance-critical computer vision processing
 - Excellent OpenCV integration and performance
 - Direct access to TUIO11_CPP reference implementation
@@ -59,23 +59,36 @@
 - Good IDE integration
 - Easy to extend and maintain
 
-#### 2.2 Development Environment: Visual Studio 2019+
+#### 2.2 Development Environment: Cross-Platform
+**Development Platform**: Linux (Ubuntu/Debian)
+**Target Platform**: Windows
 **Rationale**:
-- Primary target platform (Windows)
-- Excellent C++ debugging capabilities
-- Integrated CMake support
-- Good OpenCV integration
-- Professional development tools
+- Linux provides superior development tools and faster compilation
+- Cross-compilation to Windows using MinGW-w64 or Clang
+- Cost-effective development environment
+- Better CI/CD integration
+- Docker support for consistent builds
 
-**Alternative**: Visual Studio Code with C++ extensions
+**Development Tools**:
+- **Linux**: GCC/Clang, CMake, vcpkg, Visual Studio Code
+- **Windows**: MinGW-w64 cross-compiler, Windows SDK for deployment
 
-#### 2.3 Package Management: vcpkg
+#### 2.3 Package Management: Cross-Platform
+**Linux Development**:
+- **vcpkg**: Microsoft's C++ package manager (works on Linux)
+- **apt/apt-get**: System package manager for dependencies
+- **Conan**: Alternative C++ package manager
+
+**Windows Deployment**:
+- **vcpkg**: For Windows-specific builds
+- **Windows SDK**: For final deployment packaging
+
 **Rationale**:
-- Microsoft's C++ package manager
+- vcpkg works on both Linux and Windows
+- Consistent dependency management across platforms
 - Easy OpenCV and SDL2 installation
 - CMake integration
-- Handles complex dependencies
-- Windows-optimized
+- Handles complex cross-platform dependencies
 
 ### 3. Dependencies
 
@@ -99,11 +112,20 @@ TUIO11_CPP
 ```
 
 #### 3.2 Development Dependencies
+**Linux Development**:
 ```
 CMake 3.16+
-Visual Studio 2019+ (or compatible compiler)
+GCC 9+ or Clang 10+
 Git (version control)
 vcpkg (package manager)
+MinGW-w64 (cross-compilation)
+```
+
+**Windows Deployment**:
+```
+Windows SDK
+Visual Studio Build Tools (optional)
+vcpkg (Windows packages)
 ```
 
 ### 4. Architecture Components
@@ -157,9 +179,63 @@ class SettingsDialog
 - **Memory cleanup**: Proper RAII and smart pointers
 - **Thread safety**: Mutex protection for shared data
 
-### 6. Configuration and Deployment
+### 6. Cross-Platform Build Configuration
 
-#### 6.1 Configuration Files
+#### 6.1 Linux Development Setup
+```bash
+# Install development tools
+sudo apt update
+sudo apt install build-essential cmake git
+
+# Install MinGW-w64 for cross-compilation
+sudo apt install mingw-w64
+
+# Install vcpkg
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+./bootstrap-vcpkg.sh
+
+# Install cross-platform packages
+./vcpkg install opencv4:x64-linux
+./vcpkg install sdl2:x64-linux
+./vcpkg install opencv4:x64-mingw-dynamic
+./vcpkg install sdl2:x64-mingw-dynamic
+```
+
+#### 6.2 Cross-Compilation Configuration
+```cmake
+# CMakeLists.txt cross-compilation setup
+if(WIN32)
+    set(CMAKE_SYSTEM_NAME Windows)
+    set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)
+    set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
+    set(CMAKE_FIND_ROOT_PATH /usr/x86_64-w64-mingw32)
+    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+endif()
+```
+
+#### 6.3 Build Scripts
+```bash
+#!/bin/bash
+# build-linux.sh - Development build
+mkdir -p build-linux
+cd build-linux
+cmake .. -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
+make -j$(nproc)
+
+#!/bin/bash
+# build-windows.sh - Cross-compilation build
+mkdir -p build-windows
+cd build-windows
+cmake .. -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake \
+         -DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic
+make -j$(nproc)
+```
+
+### 7. Configuration and Deployment
+
+#### 7.1 Configuration Files
 ```json
 {
   "camera": {
@@ -230,6 +306,6 @@ target_link_libraries(CodiceCam OpenCV::OpenCV SDL2::SDL2 TUIO)
 
 ---
 
-**Document Status**: Draft  
-**Last Updated**: January 2025  
+**Document Status**: Draft
+**Last Updated**: January 2025
 **Review Cycle**: Quarterly or major technology changes

@@ -28,20 +28,39 @@ Codice-Cam bridges the gap between physical Codice markers and digital applicati
 - Multi-core CPU recommended
 
 ### Software
-- Visual Studio 2019+ or compatible C++ compiler
+**Development (Linux)**:
+- GCC 9+ or Clang 10+
 - CMake 3.16+
 - vcpkg package manager
+- MinGW-w64 (for cross-compilation)
+
+**Deployment (Windows)**:
+- Windows 10/11
+- Visual C++ Redistributable
 
 ## Quick Start
 
 ### Prerequisites
-1. Install Visual Studio 2019+ with C++ development tools
-2. Install vcpkg package manager
-3. Install required dependencies:
+**Linux Development Environment**:
+1. Install development tools:
    ```bash
-   vcpkg install opencv4:x64-windows
-   vcpkg install sdl2:x64-windows
-   vcpkg integrate install
+   sudo apt update
+   sudo apt install build-essential cmake git mingw-w64
+   ```
+
+2. Install vcpkg package manager:
+   ```bash
+   git clone https://github.com/Microsoft/vcpkg.git
+   cd vcpkg
+   ./bootstrap-vcpkg.sh
+   ```
+
+3. Install cross-platform dependencies:
+   ```bash
+   ./vcpkg install opencv4:x64-linux
+   ./vcpkg install sdl2:x64-linux
+   ./vcpkg install opencv4:x64-mingw-dynamic
+   ./vcpkg install sdl2:x64-mingw-dynamic
    ```
 
 ### Building
@@ -56,12 +75,21 @@ Codice-Cam bridges the gap between physical Codice markers and digital applicati
    git submodule update --init --recursive
    ```
 
-3. Build with CMake:
+3. Build for development (Linux):
    ```bash
-   mkdir build
-   cd build
-   cmake .. -DCMAKE_TOOLCHAIN_FILE=[vcpkg root]/scripts/buildsystems/vcpkg.cmake
-   cmake --build . --config Release
+   mkdir build-linux
+   cd build-linux
+   cmake .. -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
+   make -j$(nproc)
+   ```
+
+4. Build for Windows deployment:
+   ```bash
+   mkdir build-windows
+   cd build-windows
+   cmake .. -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake \
+            -DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic
+   make -j$(nproc)
    ```
 
 ### Running
@@ -178,5 +206,5 @@ For issues and questions:
 
 ---
 
-**Version**: 1.0.0  
+**Version**: 1.0.0
 **Last Updated**: January 2025

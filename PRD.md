@@ -3,10 +3,10 @@
 
 ### 1. Project Overview
 
-**Project Name**: Codice-Cam  
-**Version**: 1.0  
-**Date**: January 2025  
-**Target Platform**: Windows (Primary)  
+**Project Name**: Codice-Cam
+**Version**: 1.0
+**Date**: January 2025
+**Target Platform**: Windows (Primary)
 
 ### 2. Problem Statement
 
@@ -136,6 +136,6 @@ Codice-Cam is a computer vision application that:
 
 ---
 
-**Document Status**: Draft  
-**Next Review**: After architecture design completion  
+**Document Status**: Draft
+**Next Review**: After architecture design completion
 **Approval Required**: Technical Lead, Product Owner

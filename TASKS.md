@@ -52,9 +52,9 @@ This document outlines the development tasks for creating Codice-Cam, a computer
 ### Phase 1: Project Setup and Foundation
 
 #### Task 1.1: Initialize project structure and build system
-**Priority**: High  
-**Estimated Time**: 4 hours  
-**Dependencies**: None  
+**Priority**: High
+**Estimated Time**: 4 hours
+**Dependencies**: None
 
 **Description**: Set up the basic project structure with proper directory organization and initial build configuration.
 
@@ -86,9 +86,9 @@ CodiceCam/
 ---
 
 #### Task 1.2: Set up development environment and dependencies
-**Priority**: High  
-**Estimated Time**: 6 hours  
-**Dependencies**: Task 1.1  
+**Priority**: High
+**Estimated Time**: 6 hours
+**Dependencies**: Task 1.1
 
 **Description**: Install and configure all required development tools and libraries.
 
@@ -116,9 +116,9 @@ vcpkg integrate install
 ---
 
 #### Task 1.3: Create basic CMake configuration
-**Priority**: High  
-**Estimated Time**: 3 hours  
-**Dependencies**: Task 1.2  
+**Priority**: High
+**Estimated Time**: 3 hours
+**Dependencies**: Task 1.2
 
 **Description**: Create comprehensive CMake configuration for building the project with all dependencies.
 
@@ -146,9 +146,9 @@ find_package(SDL2 REQUIRED)
 ---
 
 #### Task 1.4: Integrate TUIO11_CPP library
-**Priority**: High  
-**Estimated Time**: 4 hours  
-**Dependencies**: Task 1.3  
+**Priority**: High
+**Estimated Time**: 4 hours
+**Dependencies**: Task 1.3
 
 **Description**: Integrate the TUIO11_CPP library as a submodule and configure it for use in the project.
 
@@ -173,9 +173,9 @@ git submodule add https://github.com/mkalten/TUIO11_CPP.git third_party/TUIO11_C
 ---
 
 #### Task 1.5: Set up OpenCV integration
-**Priority**: High  
-**Estimated Time**: 3 hours  
-**Dependencies**: Task 1.4  
+**Priority**: High
+**Estimated Time**: 3 hours
+**Dependencies**: Task 1.4
 
 **Description**: Configure OpenCV for computer vision operations and create basic test applications.
 
@@ -203,9 +203,9 @@ cv::imshow("Test", frame);
 ---
 
 #### Task 1.6: Create basic project documentation
-**Priority**: Medium  
-**Estimated Time**: 2 hours  
-**Dependencies**: Task 1.5  
+**Priority**: Medium
+**Estimated Time**: 2 hours
+**Dependencies**: Task 1.5
 
 **Description**: Create initial project documentation including README, build instructions, and development setup.
 
@@ -226,9 +226,9 @@ cv::imshow("Test", frame);
 ### Phase 2: Core Detection Pipeline
 
 #### Task 2.1: Implement camera capture module
-**Priority**: High  
-**Estimated Time**: 6 hours  
-**Dependencies**: Task 1.6  
+**Priority**: High
+**Estimated Time**: 6 hours
+**Dependencies**: Task 1.6
 
 **Description**: Create a robust camera capture module with threading and error handling.
 
@@ -258,9 +258,9 @@ class CameraManager {
 ---
 
 #### Task 2.2: Create image preprocessing pipeline
-**Priority**: High  
-**Estimated Time**: 4 hours  
-**Dependencies**: Task 2.1  
+**Priority**: High
+**Estimated Time**: 4 hours
+**Dependencies**: Task 2.1
 
 **Description**: Implement image preprocessing for marker detection including noise reduction and enhancement.
 
@@ -282,8 +282,8 @@ cv::Mat preprocessFrame(const cv::Mat& frame) {
     cv::Mat gray, blurred, thresh;
     cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
     cv::GaussianBlur(gray, blurred, cv::Size(3,3), 0);
-    cv::adaptiveThreshold(blurred, thresh, 255, 
-                         cv::ADAPTIVE_THRESH_GAUSSIAN_C, 
+    cv::adaptiveThreshold(blurred, thresh, 255,
+                         cv::ADAPTIVE_THRESH_GAUSSIAN_C,
                          cv::THRESH_BINARY, 11, 2);
     return thresh;
 }
@@ -292,9 +292,9 @@ cv::Mat preprocessFrame(const cv::Mat& frame) {
 ---
 
 #### Task 2.3: Develop marker detection algorithm
-**Priority**: High  
-**Estimated Time**: 8 hours  
-**Dependencies**: Task 2.2  
+**Priority**: High
+**Estimated Time**: 8 hours
+**Dependencies**: Task 2.2
 
 **Description**: Implement the core marker detection algorithm using contour detection and validation.
 
@@ -314,7 +314,7 @@ cv::Mat preprocessFrame(const cv::Mat& frame) {
 ```cpp
 std::vector<cv::Point2f> findMarkerContours(const cv::Mat& binary) {
     std::vector<std::vector<cv::Point>> contours;
-    cv::findContours(binary, contours, cv::RETR_EXTERNAL, 
+    cv::findContours(binary, contours, cv::RETR_EXTERNAL,
                      cv::CHAIN_APPROX_SIMPLE);
     // Filter and validate contours
     return validMarkers;
@@ -324,9 +324,9 @@ std::vector<cv::Point2f> findMarkerContours(const cv::Mat& binary) {
 ---
 
 #### Task 2.4: Implement Codice marker decoding
-**Priority**: High  
-**Estimated Time**: 6 hours  
-**Dependencies**: Task 2.3  
+**Priority**: High
+**Estimated Time**: 6 hours
+**Dependencies**: Task 2.3
 
 **Description**: Create the Codice marker decoding system to extract IDs from detected markers.
 
@@ -357,9 +357,9 @@ DecodedMarker decodeMarker(const cv::Mat& markerImage);
 ---
 
 #### Task 2.5: Add marker validation and filtering
-**Priority**: Medium  
-**Estimated Time**: 4 hours  
-**Dependencies**: Task 2.4  
+**Priority**: Medium
+**Estimated Time**: 4 hours
+**Dependencies**: Task 2.4
 
 **Description**: Implement validation and filtering to ensure only valid Codice markers are processed.
 
@@ -378,9 +378,9 @@ DecodedMarker decodeMarker(const cv::Mat& markerImage);
 ---
 
 #### Task 2.6: Optimize detection performance
-**Priority**: Medium  
-**Estimated Time**: 6 hours  
-**Dependencies**: Task 2.5  
+**Priority**: Medium
+**Estimated Time**: 6 hours
+**Dependencies**: Task 2.5
 
 **Description**: Optimize the detection pipeline for real-time performance.
 
@@ -401,9 +401,9 @@ DecodedMarker decodeMarker(const cv::Mat& markerImage);
 ### Phase 3: TUIO Integration
 
 #### Task 3.1: Integrate TUIO server functionality
-**Priority**: High  
-**Estimated Time**: 4 hours  
-**Dependencies**: Task 2.6  
+**Priority**: High
+**Estimated Time**: 4 hours
+**Dependencies**: Task 2.6
 
 **Description**: Integrate TUIO server functionality for streaming marker data.
 
@@ -431,9 +431,9 @@ class TUIOBridge {
 ---
 
 #### Task 3.2: Map Codice markers to TUIO objects
-**Priority**: High  
-**Estimated Time**: 3 hours  
-**Dependencies**: Task 3.1  
+**Priority**: High
+**Estimated Time**: 3 hours
+**Dependencies**: Task 3.1
 
 **Description**: Create mapping between Codice markers and TUIO objects.
 
@@ -452,9 +452,9 @@ class TUIOBridge {
 ---
 
 #### Task 3.3: Implement marker lifecycle management
-**Priority**: High  
-**Estimated Time**: 4 hours  
-**Dependencies**: Task 3.2  
+**Priority**: High
+**Estimated Time**: 4 hours
+**Dependencies**: Task 3.2
 
 **Description**: Implement proper marker lifecycle management (add/update/remove).
 
@@ -473,9 +473,9 @@ class TUIOBridge {
 ---
 
 #### Task 3.4: Add TUIO streaming configuration
-**Priority**: Medium  
-**Estimated Time**: 3 hours  
-**Dependencies**: Task 3.3  
+**Priority**: Medium
+**Estimated Time**: 3 hours
+**Dependencies**: Task 3.3
 
 **Description**: Add configuration options for TUIO streaming.
 
@@ -494,9 +494,9 @@ class TUIOBridge {
 ---
 
 #### Task 3.5: Test TUIO integration with MT Showcase
-**Priority**: High  
-**Estimated Time**: 4 hours  
-**Dependencies**: Task 3.4  
+**Priority**: High
+**Estimated Time**: 4 hours
+**Dependencies**: Task 3.4
 
 **Description**: Test the complete TUIO integration with MT Showcase software.
 
@@ -517,9 +517,9 @@ class TUIOBridge {
 ### Phase 4: User Interface
 
 #### Task 4.1: Create main application window
-**Priority**: Medium  
-**Estimated Time**: 6 hours  
-**Dependencies**: Task 3.5  
+**Priority**: Medium
+**Estimated Time**: 6 hours
+**Dependencies**: Task 3.5
 
 **Description**: Create the main application window with SDL2.
 
@@ -548,9 +548,9 @@ class MainWindow {
 ---
 
 #### Task 4.2: Implement camera selection and settings
-**Priority**: Medium  
-**Estimated Time**: 4 hours  
-**Dependencies**: Task 4.1  
+**Priority**: Medium
+**Estimated Time**: 4 hours
+**Dependencies**: Task 4.1
 
 **Description**: Add camera selection and configuration options to the UI.
 
@@ -569,9 +569,9 @@ class MainWindow {
 ---
 
 #### Task 4.3: Add detection visualization overlay
-**Priority**: Medium  
-**Estimated Time**: 5 hours  
-**Dependencies**: Task 4.2  
+**Priority**: Medium
+**Estimated Time**: 5 hours
+**Dependencies**: Task 4.2
 
 **Description**: Add visual overlay showing detected markers and detection status.
 
@@ -590,9 +590,9 @@ class MainWindow {
 ---
 
 #### Task 4.4: Create configuration management
-**Priority**: Medium  
-**Estimated Time**: 4 hours  
-**Dependencies**: Task 4.3  
+**Priority**: Medium
+**Estimated Time**: 4 hours
+**Dependencies**: Task 4.3
 
 **Description**: Implement configuration management system.
 
@@ -611,9 +611,9 @@ class MainWindow {
 ---
 
 #### Task 4.5: Add status indicators and error handling
-**Priority**: Medium  
-**Estimated Time**: 3 hours  
-**Dependencies**: Task 4.4  
+**Priority**: Medium
+**Estimated Time**: 3 hours
+**Dependencies**: Task 4.4
 
 **Description**: Add status indicators and error handling to the UI.
 
@@ -632,9 +632,9 @@ class MainWindow {
 ---
 
 #### Task 4.6: Implement settings persistence
-**Priority**: Low  
-**Estimated Time**: 2 hours  
-**Dependencies**: Task 4.5  
+**Priority**: Low
+**Estimated Time**: 2 hours
+**Dependencies**: Task 4.5
 
 **Description**: Implement settings persistence between application sessions.
 
@@ -655,9 +655,9 @@ class MainWindow {
 ### Phase 5: Testing and Optimization
 
 #### Task 5.1: Create unit tests for core components
-**Priority**: Medium  
-**Estimated Time**: 8 hours  
-**Dependencies**: Task 4.6  
+**Priority**: Medium
+**Estimated Time**: 8 hours
+**Dependencies**: Task 4.6
 
 **Description**: Create comprehensive unit tests for all core components.
 
@@ -686,9 +686,9 @@ TEST(MarkerDetectorTest, DetectsValidMarkers) {
 ---
 
 #### Task 5.2: Implement integration tests
-**Priority**: Medium  
-**Estimated Time**: 6 hours  
-**Dependencies**: Task 5.1  
+**Priority**: Medium
+**Estimated Time**: 6 hours
+**Dependencies**: Task 5.1
 
 **Description**: Create integration tests for the complete system.
 
@@ -707,9 +707,9 @@ TEST(MarkerDetectorTest, DetectsValidMarkers) {
 ---
 
 #### Task 5.3: Performance testing and optimization
-**Priority**: Medium  
-**Estimated Time**: 8 hours  
-**Dependencies**: Task 5.2  
+**Priority**: Medium
+**Estimated Time**: 8 hours
+**Dependencies**: Task 5.2
 
 **Description**: Conduct comprehensive performance testing and optimization.
 
@@ -728,9 +728,9 @@ TEST(MarkerDetectorTest, DetectsValidMarkers) {
 ---
 
 #### Task 5.4: Hardware compatibility testing
-**Priority**: Medium  
-**Estimated Time**: 6 hours  
-**Dependencies**: Task 5.3  
+**Priority**: Medium
+**Estimated Time**: 6 hours
+**Dependencies**: Task 5.3
 
 **Description**: Test compatibility with various hardware configurations.
 
@@ -749,9 +749,9 @@ TEST(MarkerDetectorTest, DetectsValidMarkers) {
 ---
 
 #### Task 5.5: User acceptance testing
-**Priority**: High  
-**Estimated Time**: 4 hours  
-**Dependencies**: Task 5.4  
+**Priority**: High
+**Estimated Time**: 4 hours
+**Dependencies**: Task 5.4
 
 **Description**: Conduct user acceptance testing with target users.
 
@@ -770,9 +770,9 @@ TEST(MarkerDetectorTest, DetectsValidMarkers) {
 ---
 
 #### Task 5.6: Documentation and deployment
-**Priority**: High  
-**Estimated Time**: 6 hours  
-**Dependencies**: Task 5.5  
+**Priority**: High
+**Estimated Time**: 6 hours
+**Dependencies**: Task 5.5
 
 **Description**: Create final documentation and deployment package.
 
@@ -839,6 +839,6 @@ Phase 5: Testing
 
 ---
 
-**Document Status**: Draft  
-**Last Updated**: January 2025  
+**Document Status**: Draft
+**Last Updated**: January 2025
 **Review Cycle**: Weekly during development
