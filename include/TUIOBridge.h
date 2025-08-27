@@ -7,6 +7,7 @@
 #include <chrono>
 #include <functional>
 #include <list>
+#include "TUIOConfig.h"
 
 // Include TUIO headers
 #include "TuioServer.h"
@@ -159,6 +160,46 @@ public:
      * @return true if transition successful, false otherwise
      */
     bool transitionMarkerState(int marker_id, MarkerState new_state);
+    
+    /**
+     * @brief Set TUIO streaming configuration
+     * @param config TUIO streaming configuration
+     * @return true if configuration is valid and applied, false otherwise
+     */
+    bool setStreamingConfig(const TUIOStreamingConfig& config);
+    
+    /**
+     * @brief Get current TUIO streaming configuration
+     * @return Current TUIO streaming configuration
+     */
+    const TUIOStreamingConfig& getStreamingConfig() const;
+    
+    /**
+     * @brief Load configuration from file
+     * @param config_file Path to configuration file
+     * @return true if loaded successfully, false otherwise
+     */
+    bool loadConfigFromFile(const std::string& config_file);
+    
+    /**
+     * @brief Save configuration to file
+     * @param config_file Path to configuration file
+     * @return true if saved successfully, false otherwise
+     */
+    bool saveConfigToFile(const std::string& config_file) const;
+    
+    /**
+     * @brief Apply configuration profile
+     * @param profile_name Name of the configuration profile
+     * @return true if profile applied successfully, false otherwise
+     */
+    bool applyConfigProfile(const std::string& profile_name);
+    
+    /**
+     * @brief Get available configuration profiles
+     * @return List of available profile names
+     */
+    std::vector<std::string> getAvailableProfiles() const;
 
 private:
     std::unique_ptr<TUIO::TuioServer> tuio_server_;
@@ -182,6 +223,9 @@ private:
     std::map<int, MarkerState> marker_states_;
     int total_detected_;
     int total_lost_;
+    
+    // Configuration management
+    TUIOConfigManager config_manager_;
     
     /**
      * @brief Generate unique session ID for a marker

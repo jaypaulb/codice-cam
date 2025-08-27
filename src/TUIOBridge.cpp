@@ -33,8 +33,10 @@ TUIOBridge::~TUIOBridge() {
 
 bool TUIOBridge::initialize(const std::string& host, int port) {
     try {
-        host_ = host;
-        port_ = port;
+        // Use configuration if available, otherwise use provided parameters
+        const auto& config = config_manager_.getConfig();
+        host_ = host.empty() ? config.host : host;
+        port_ = (port <= 0) ? config.port : port;
         
         // Create TUIO server with host and port
         tuio_server_ = std::make_unique<TUIO::TuioServer>(host_.c_str(), port_);
@@ -45,6 +47,7 @@ bool TUIOBridge::initialize(const std::string& host, int port) {
         }
         
         std::cout << "✅ TUIO server initialized: " << host_ << ":" << port_ << std::endl;
+        std::cout << "📋 Configuration: " << config.max_fps << " FPS, " << config.max_markers << " max markers" << std::endl;
         return true;
         
     } catch (const std::exception& e) {
@@ -311,6 +314,57 @@ std::map<int, int> TUIOBridge::getActiveMappings() const {
     }
     
     return mappings;
+}
+
+bool TUIOBridge::setStreamingConfig(const TUIOStreamingConfig& config) {
+    if (!config.validate()) {
+        std::cerr << "❌ Invalid streaming configuration: " << config.getValidationErrors() << std::endl;
+        return false;
+    }
+    
+    if (!config_manager_.setConfig(config)) {
+        return false;
+    }
+    
+    // Apply configuration to running server if needed
+    if (running_) {
+        std::cout << "⚠️  Configuration updated while server is running. Restart server to apply changes." << std::endl;
+    }
+    
+    return true;
+}
+
+const TUIOStreamingConfig& TUIOBridge::getStreamingConfig() const {
+    return config_manager_.getConfig();
+}
+
+bool TUIOBridge::loadConfigFromFile(const std::string& config_file) {
+    return config_manager_.loadFromFile(config_file);
+}
+
+bool TUIOBridge::saveConfigToFile(const std::string& config_file) const {
+    return config_manager_.saveToFile(config_file);
+}
+
+bool TUIOBridge::applyConfigProfile(const std::string& profile_name) {
+    const auto& current_config = config_manager_.getConfig();
+    TUIOStreamingConfig profile_config = current_config.getProfile(profile_name);
+    
+    if (!profile_config.validate()) {
+        std::cerr << "❌ Invalid profile configuration: " << profile_config.getValidationErrors() << std::endl;
+        return false;
+    }
+    
+    if (!config_manager_.setConfig(profile_config)) {
+        return false;
+    }
+    
+    std::cout << "✅ Applied configuration profile: " << profile_name << std::endl;
+    return true;
+}
+
+std::vector<std::string> TUIOBridge::getAvailableProfiles() const {
+    return config_manager_.getConfig().getAvailableProfiles();
 }
 
 void TUIOBridge::setLifecycleCallback(std::function<void(int marker_id, MarkerState state, const CodiceMarker& marker)> callback) {
