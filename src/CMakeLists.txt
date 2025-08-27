@@ -25,6 +25,7 @@ set(SOURCES
     TUIOBridge.cpp
     TUIOConfig.cpp
     TUIOValidator.cpp
+    TUIOTestClient.cpp
     # MainWindow.cpp
 )
 
