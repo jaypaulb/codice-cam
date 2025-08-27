@@ -15,7 +15,7 @@ bool TUIOStreamingConfig::validate() const {
 
 std::string TUIOStreamingConfig::getValidationErrors() const {
     std::vector<std::string> errors;
-    
+
     // Network validation
     if (host.empty()) {
         errors.push_back("Host cannot be empty");
@@ -26,7 +26,7 @@ std::string TUIOStreamingConfig::getValidationErrors() const {
     if (timeout_ms < 100) {
         errors.push_back("Timeout must be at least 100ms");
     }
-    
+
     // Streaming validation
     if (max_fps < 1 || max_fps > 120) {
         errors.push_back("Max FPS must be between 1 and 120");
@@ -34,7 +34,7 @@ std::string TUIOStreamingConfig::getValidationErrors() const {
     if (buffer_size < 256) {
         errors.push_back("Buffer size must be at least 256 bytes");
     }
-    
+
     // Marker validation
     if (marker_timeout_ms < 100) {
         errors.push_back("Marker timeout must be at least 100ms");
@@ -45,7 +45,7 @@ std::string TUIOStreamingConfig::getValidationErrors() const {
     if (max_markers < 1 || max_markers > 100) {
         errors.push_back("Max markers must be between 1 and 100");
     }
-    
+
     // Performance validation
     if (motion_smoothing_factor < 0.0 || motion_smoothing_factor > 1.0) {
         errors.push_back("Motion smoothing factor must be between 0.0 and 1.0");
@@ -53,7 +53,7 @@ std::string TUIOStreamingConfig::getValidationErrors() const {
     if (prediction_frames < 0 || prediction_frames > 10) {
         errors.push_back("Prediction frames must be between 0 and 10");
     }
-    
+
     std::ostringstream oss;
     for (size_t i = 0; i < errors.size(); ++i) {
         if (i > 0) oss << "; ";
@@ -131,9 +131,9 @@ bool TUIOStreamingConfig::fromJson(const std::string& json) {
     std::regex marker_timeout_regex("\"marker_timeout_ms\":\\s*(\\d+)");
     std::regex min_confidence_regex("\"min_confidence\":\\s*([\\d.]+)");
     std::regex max_markers_regex("\"max_markers\":\\s*(\\d+)");
-    
+
     std::smatch match;
-    
+
     if (std::regex_search(json, match, host_regex)) {
         host = match[1].str();
     }
@@ -158,7 +158,7 @@ bool TUIOStreamingConfig::fromJson(const std::string& json) {
     if (std::regex_search(json, match, max_markers_regex)) {
         max_markers = std::stoi(match[1].str());
     }
-    
+
     return validate();
 }
 
@@ -186,7 +186,7 @@ void TUIOStreamingConfig::merge(const TUIOStreamingConfig& other) {
 TUIOStreamingConfig TUIOStreamingConfig::getProfile(const std::string& profile_name) const {
     // Return a copy with profile-specific settings
     TUIOStreamingConfig profile = *this;
-    
+
     if (profile_name == "high_performance") {
         profile.max_fps = 60;
         profile.enable_compression = true;
@@ -205,7 +205,7 @@ TUIOStreamingConfig TUIOStreamingConfig::getProfile(const std::string& profile_n
         profile.statistics_interval_ms = 1000;
         profile.max_fps = 15;
     }
-    
+
     return profile;
 }
 
@@ -229,17 +229,17 @@ bool TUIOConfigManager::loadFromFile(const std::string& config_file) {
         std::cerr << "❌ Failed to open configuration file: " << config_file << std::endl;
         return false;
     }
-    
+
     std::string json_content((std::istreambuf_iterator<char>(file)),
                            std::istreambuf_iterator<char>());
     file.close();
-    
+
     TUIOStreamingConfig new_config;
     if (!new_config.fromJson(json_content)) {
         std::cerr << "❌ Invalid configuration file: " << new_config.getValidationErrors() << std::endl;
         return false;
     }
-    
+
     config_ = new_config;
     std::cout << "✅ Configuration loaded from: " << config_file << std::endl;
     return true;
@@ -251,10 +251,10 @@ bool TUIOConfigManager::saveToFile(const std::string& config_file) const {
         std::cerr << "❌ Failed to create configuration file: " << config_file << std::endl;
         return false;
     }
-    
+
     file << config_.toJson();
     file.close();
-    
+
     std::cout << "✅ Configuration saved to: " << config_file << std::endl;
     return true;
 }
@@ -268,7 +268,7 @@ bool TUIOConfigManager::setConfig(const TUIOStreamingConfig& config) {
         std::cerr << "❌ Invalid configuration: " << config.getValidationErrors() << std::endl;
         return false;
     }
-    
+
     config_ = config;
     std::cout << "✅ Configuration updated successfully" << std::endl;
     return true;
@@ -328,13 +328,13 @@ void TUIOConfigManager::initializeDefaultProfiles() {
     TUIOStreamingConfig default_profile;
     default_profile.setDefaults();
     profiles_["default"] = default_profile;
-    
+
     TUIOStreamingConfig high_perf = default_profile.getProfile("high_performance");
     profiles_["high_performance"] = high_perf;
-    
+
     TUIOStreamingConfig low_latency = default_profile.getProfile("low_latency");
     profiles_["low_latency"] = low_latency;
-    
+
     TUIOStreamingConfig debug = default_profile.getProfile("debug");
     profiles_["debug"] = debug;
 }
@@ -376,7 +376,7 @@ bool TUIOConfigManager::parseJsonValue(const std::string& key, const std::string
     } else {
         return false;
     }
-    
+
     return config_.validate();
 }
 
