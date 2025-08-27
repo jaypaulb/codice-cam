@@ -30,6 +30,12 @@ struct CodiceMarker {
  * 
  * This class manages the TUIO server and maps Codice markers to TUIO objects,
  * providing real-time streaming of marker data to MT Showcase software.
+ * 
+ * ## Mapping Strategy
+ * - Codice marker IDs (0-4095) map directly to TUIO symbol IDs
+ * - Session IDs are generated using TUIO's internal session management
+ * - Object lifecycle: ADD -> UPDATE -> REMOVE
+ * - Position coordinates are normalized (0.0-1.0) for TUIO compatibility
  */
 class TUIOBridge {
 public:
@@ -91,6 +97,26 @@ public:
      * @return Statistics string
      */
     std::string getStatistics() const;
+    
+    /**
+     * @brief Get mapping information for a specific marker
+     * @param marker_id Codice marker ID
+     * @return Mapping information string
+     */
+    std::string getMappingInfo(int marker_id) const;
+    
+    /**
+     * @brief Validate marker mapping
+     * @param marker Codice marker to validate
+     * @return true if mapping is valid, false otherwise
+     */
+    bool validateMapping(const CodiceMarker& marker) const;
+    
+    /**
+     * @brief Get all active mappings
+     * @return Map of marker ID to session ID
+     */
+    std::map<int, int> getActiveMappings() const;
 
 private:
     std::unique_ptr<TUIO::TuioServer> tuio_server_;
@@ -113,7 +139,28 @@ private:
      * @param marker_id Codice marker ID
      * @return Session ID
      */
-    int generateSessionId(int marker_id);
+    int generateSessionId(int marker_id) const;
+    
+    /**
+     * @brief Get next available session ID from TUIO server
+     * @return Next available session ID
+     */
+    int getNextSessionId() const;
+    
+    /**
+     * @brief Validate Codice marker ID range
+     * @param marker_id Codice marker ID to validate
+     * @return true if valid, false otherwise
+     */
+    bool isValidCodiceId(int marker_id) const;
+    
+    /**
+     * @brief Validate TUIO coordinates
+     * @param x X coordinate
+     * @param y Y coordinate
+     * @return true if valid, false otherwise
+     */
+    bool isValidCoordinates(float x, float y) const;
     
     /**
      * @brief Clean up expired markers

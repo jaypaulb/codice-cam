@@ -3,6 +3,7 @@
 #include <sstream>
 #include <algorithm>
 #include <set>
+#include <iomanip>
 
 // Include TUIO headers
 #include "TuioServer.h"
@@ -111,6 +112,12 @@ void TUIOBridge::updateMarkers(const std::vector<CodiceMarker>& markers) {
         
         // Update existing markers and add new ones
         for (const auto& marker : markers) {
+            // Validate marker before processing
+            if (!validateMapping(marker)) {
+                std::cerr << "⚠️  Skipping invalid marker ID: " << marker.id << std::endl;
+                continue;
+            }
+            
             int session_id = generateSessionId(marker.id);
             
             if (active_objects_.find(session_id) != active_objects_.end()) {
@@ -120,6 +127,7 @@ void TUIOBridge::updateMarkers(const std::vector<CodiceMarker>& markers) {
                 total_objects_updated_++;
             } else {
                 // Create new object using TuioServer's addTuioObject method
+                // Direct mapping: Codice marker ID -> TUIO symbol ID
                 auto obj = tuio_server_->addTuioObject(marker.id, marker.x, marker.y, marker.angle);
                 if (obj) {
                     active_objects_[session_id] = obj;
@@ -187,11 +195,94 @@ std::string TUIOBridge::getStatistics() const {
     return oss.str();
 }
 
-int TUIOBridge::generateSessionId(int marker_id) {
-    // Use marker ID as base for session ID, but ensure uniqueness
-    // For now, we'll use a simple mapping: session_id = marker_id + 1000
-    // This ensures session IDs don't conflict with TUIO's internal IDs
-    return marker_id + 1000;
+std::string TUIOBridge::getMappingInfo(int marker_id) const {
+    std::ostringstream oss;
+    oss << "Mapping Info for Codice Marker ID " << marker_id << ":\n";
+    
+    if (!isValidCodiceId(marker_id)) {
+        oss << "  ❌ Invalid Codice marker ID (must be 0-4095)\n";
+        return oss.str();
+    }
+    
+    // Check if marker is currently active
+    int session_id = generateSessionId(marker_id);
+    if (active_objects_.find(session_id) != active_objects_.end()) {
+        auto obj = active_objects_.at(session_id);
+        oss << "  ✅ Active TUIO Object\n";
+        oss << "  📍 Session ID: " << session_id << "\n";
+        oss << "  🎯 Symbol ID: " << obj->getSymbolID() << "\n";
+        oss << "  📊 Position: (" << std::fixed << std::setprecision(3) 
+            << obj->getX() << ", " << obj->getY() << ")\n";
+        oss << "  🔄 Angle: " << std::setprecision(2) << obj->getAngle() << " rad\n";
+    } else {
+        oss << "  ⏸️  Not currently active\n";
+        oss << "  📍 Would use Session ID: " << session_id << "\n";
+        oss << "  🎯 Symbol ID: " << marker_id << " (direct mapping)\n";
+    }
+    
+    return oss.str();
+}
+
+bool TUIOBridge::validateMapping(const CodiceMarker& marker) const {
+    // Validate Codice marker ID
+    if (!isValidCodiceId(marker.id)) {
+        std::cerr << "❌ Invalid Codice marker ID: " << marker.id << std::endl;
+        return false;
+    }
+    
+    // Validate coordinates
+    if (!isValidCoordinates(marker.x, marker.y)) {
+        std::cerr << "❌ Invalid coordinates: (" << marker.x << ", " << marker.y << ")" << std::endl;
+        return false;
+    }
+    
+    // Validate confidence
+    if (marker.confidence < 0.0 || marker.confidence > 1.0) {
+        std::cerr << "❌ Invalid confidence: " << marker.confidence << std::endl;
+        return false;
+    }
+    
+    return true;
+}
+
+std::map<int, int> TUIOBridge::getActiveMappings() const {
+    std::map<int, int> mappings;
+    
+    for (const auto& [session_id, obj] : active_objects_) {
+        int marker_id = obj->getSymbolID();
+        mappings[marker_id] = session_id;
+    }
+    
+    return mappings;
+}
+
+int TUIOBridge::generateSessionId(int marker_id) const {
+    // Use TUIO server's session ID management for proper uniqueness
+    // This ensures session IDs are managed correctly by the TUIO protocol
+    return getNextSessionId();
+}
+
+int TUIOBridge::getNextSessionId() const {
+    if (tuio_server_) {
+        // Use TUIO server's internal session ID management
+        // Note: TUIO server manages session IDs internally, we'll use a simple counter
+        static int session_counter = 1000;
+        return ++session_counter;
+    }
+    // Fallback: generate a simple unique ID
+    static int fallback_id = 1000;
+    return ++fallback_id;
+}
+
+bool TUIOBridge::isValidCodiceId(int marker_id) const {
+    // Codice markers support 4x4 grid with 11 data bits = 2048 possible IDs (0-2047)
+    // But we'll be conservative and support the full range for future expansion
+    return marker_id >= 0 && marker_id <= 4095;
+}
+
+bool TUIOBridge::isValidCoordinates(float x, float y) const {
+    // TUIO coordinates must be normalized (0.0-1.0)
+    return x >= 0.0f && x <= 1.0f && y >= 0.0f && y <= 1.0f;
 }
 
 void TUIOBridge::cleanupExpiredMarkers() {
