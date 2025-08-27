@@ -41,7 +41,7 @@ add_executable(CodiceCam ${SOURCES} ${HEADERS})
 target_link_libraries(CodiceCam
     ${OPENCV_LIBS}
     ${SDL2_LIBS}
-    # TUIO library will be added here
+    TUIO
 )
 
 # Include directories
