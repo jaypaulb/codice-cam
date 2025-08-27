@@ -22,7 +22,7 @@ MarkerDetector::MarkerDetector()
     , total_detection_attempts_(0)
 {
     // Configure image processor for marker detection
-    image_processor_->setPreprocessingParams(3, 1.3, 20);  // Light blur, enhanced contrast
+    image_processor_->setPreprocessingParams(1, 1.3, 20);  // NO blur (kernel=1), enhanced contrast
     image_processor_->setEdgeDetectionParams(30, 100);     // Lower thresholds for better detection
     image_processor_->setContourFilterParams(500, 100000, 80);  // Larger area range for markers
 }
@@ -307,8 +307,13 @@ bool MarkerDetector::extractAndDeskewMarker(const cv::Mat& frame, const std::vec
     cv::Mat transform_matrix = cv::getPerspectiveTransform(corners, dst_points);
     DEBUG_OUT("🔍 [DEBUG] Perspective transform matrix calculated" << std::endl);
 
+    // Use the PREPROCESSED frame (not the edge-detected frame) for marker extraction
+    // This contains the actual marker content (white/black pattern) not just edges
+    const cv::Mat& preprocessed_frame = image_processor_->getPreprocessedFrame();
+    DEBUG_OUT("🔍 [DEBUG] Using preprocessed frame for marker extraction, size: " << preprocessed_frame.cols << "x" << preprocessed_frame.rows << std::endl);
+
     // Apply perspective transform to extract and deskew the marker
-    cv::warpPerspective(frame, marker_region, transform_matrix, cv::Size(100, 100));
+    cv::warpPerspective(preprocessed_frame, marker_region, transform_matrix, cv::Size(100, 100));
     DEBUG_OUT("🔍 [DEBUG] Perspective transform applied, result size: " << marker_region.cols << "x" << marker_region.rows << std::endl);
 
     // Validate the result
@@ -420,8 +425,8 @@ bool MarkerDetector::decodeMarker(const cv::Mat& marker_region, int& marker_id, 
     bool pattern_valid = isValidCodicePattern(binary_marker);
     DEBUG_OUT("🔍 [DEBUG] Pattern validation result: " << (pattern_valid ? "PASSED" : "FAILED") << std::endl);
     if (!pattern_valid) {
-        DEBUG_OUT("🔍 [DEBUG] Pattern validation failed - but continuing to decode anyway..." << std::endl);
-        // Don't return false, continue to decode
+        DEBUG_OUT("🔍 [DEBUG] Pattern validation failed - this is not a valid Codice marker" << std::endl);
+        return false; // Don't continue if pattern validation fails
     } else {
         DEBUG_OUT("🔍 [DEBUG] Pattern validation passed" << std::endl);
     }
