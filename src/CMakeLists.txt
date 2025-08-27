@@ -15,10 +15,10 @@ else()
     set(SDL2_LIBS SDL2::SDL2)
 endif()
 
-# Source files (to be added as we develop)
+# Source files
 set(SOURCES
     main.cpp
-    # CameraManager.cpp
+    CameraManager.cpp
     # MarkerDetector.cpp
     # CodiceDecoder.cpp
     # TUIOBridge.cpp
