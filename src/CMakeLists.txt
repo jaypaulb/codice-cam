@@ -19,7 +19,8 @@ endif()
 set(SOURCES
     main.cpp
     CameraManager.cpp
-    # MarkerDetector.cpp
+    ImageProcessor.cpp
+    MarkerDetector.cpp
     # CodiceDecoder.cpp
     # TUIOBridge.cpp
     # MainWindow.cpp

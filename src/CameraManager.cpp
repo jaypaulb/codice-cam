@@ -42,7 +42,7 @@ bool CameraManager::initialize() {
     // Set frame dimensions
     cap_->set(cv::CAP_PROP_FRAME_WIDTH, width_);
     cap_->set(cv::CAP_PROP_FRAME_HEIGHT, height_);
-    
+
     // Set target FPS to 30
     cap_->set(cv::CAP_PROP_FPS, 30.0);
 
@@ -51,7 +51,7 @@ bool CameraManager::initialize() {
     int actual_height = static_cast<int>(cap_->get(cv::CAP_PROP_FRAME_HEIGHT));
     double actual_fps = cap_->get(cv::CAP_PROP_FPS);
 
-    std::cout << "📹 Camera initialized: " << actual_width << "x" << actual_height 
+    std::cout << "📹 Camera initialized: " << actual_width << "x" << actual_height
               << " @ " << std::fixed << std::setprecision(1) << actual_fps << " FPS" << std::endl;
 
     // Update dimensions to actual values
@@ -159,7 +159,7 @@ void CameraManager::captureLoop() {
 
     while (capturing_) {
         auto frame_start_time = std::chrono::steady_clock::now();
-        
+
         if (!cap_->read(frame)) {
             std::cerr << "❌ Failed to read frame from camera" << std::endl;
             break;
@@ -178,13 +178,13 @@ void CameraManager::captureLoop() {
         // Calculate frame processing time
         auto frame_end_time = std::chrono::steady_clock::now();
         auto frame_duration = std::chrono::duration_cast<std::chrono::milliseconds>(frame_end_time - frame_start_time);
-        
+
         // Sleep to maintain target FPS
         if (frame_duration < target_frame_duration) {
             auto sleep_duration = target_frame_duration - frame_duration;
             std::this_thread::sleep_for(sleep_duration);
         }
-        
+
         last_frame_time = frame_end_time;
     }
 }
