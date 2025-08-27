@@ -24,6 +24,7 @@ set(SOURCES
     # CodiceDecoder.cpp
     TUIOBridge.cpp
     TUIOConfig.cpp
+    TUIOValidator.cpp
     # MainWindow.cpp
 )
 
