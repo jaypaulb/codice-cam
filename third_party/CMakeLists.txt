@@ -16,6 +16,7 @@ add_library(TUIO STATIC
     ${TUIO_SOURCE_DIR}/TUIO/TuioPoint.cpp
     ${TUIO_SOURCE_DIR}/TUIO/TuioServer.cpp
     ${TUIO_SOURCE_DIR}/TUIO/TuioTime.cpp
+    ${TUIO_SOURCE_DIR}/TUIO/OneEuroFilter.cpp
 
     # OSC communication files
     ${TUIO_SOURCE_DIR}/TUIO/OscReceiver.cpp

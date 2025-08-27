@@ -22,21 +22,12 @@ set(SOURCES
     ImageProcessor.cpp
     MarkerDetector.cpp
     # CodiceDecoder.cpp
-    # TUIOBridge.cpp
+    TUIOBridge.cpp
     # MainWindow.cpp
 )
 
-# Header files
-set(HEADERS
-    # CameraManager.h
-    # MarkerDetector.h
-    # CodiceDecoder.h
-    # TUIOBridge.h
-    # MainWindow.h
-)
-
 # Create executable
-add_executable(CodiceCam ${SOURCES} ${HEADERS})
+add_executable(CodiceCam ${SOURCES})
 
 # Link libraries
 target_link_libraries(CodiceCam
@@ -48,6 +39,8 @@ target_link_libraries(CodiceCam
 # Include directories
 target_include_directories(CodiceCam PRIVATE
     ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/third_party/TUIO11_CPP/TUIO
+    ${CMAKE_SOURCE_DIR}/third_party/TUIO11_CPP/oscpack
     ${OpenCV_INCLUDE_DIRS}
 )
 
