@@ -23,6 +23,7 @@ set(SOURCES
     MarkerDetector.cpp
     # CodiceDecoder.cpp
     TUIOBridge.cpp
+    TUIOConfig.cpp
     # MainWindow.cpp
 )
 
