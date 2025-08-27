@@ -16,7 +16,7 @@ add_library(TUIO STATIC
     ${TUIO_SOURCE_DIR}/TUIO/TuioPoint.cpp
     ${TUIO_SOURCE_DIR}/TUIO/TuioServer.cpp
     ${TUIO_SOURCE_DIR}/TUIO/TuioTime.cpp
-    
+
     # OSC communication files
     ${TUIO_SOURCE_DIR}/TUIO/OscReceiver.cpp
     ${TUIO_SOURCE_DIR}/TUIO/TcpReceiver.cpp
@@ -25,7 +25,7 @@ add_library(TUIO STATIC
     ${TUIO_SOURCE_DIR}/TUIO/UdpSender.cpp
     ${TUIO_SOURCE_DIR}/TUIO/WebSockSender.cpp
     ${TUIO_SOURCE_DIR}/TUIO/FlashSender.cpp
-    
+
     # OSC library files
     ${TUIO_SOURCE_DIR}/oscpack/osc/OscOutboundPacketStream.cpp
     ${TUIO_SOURCE_DIR}/oscpack/osc/OscReceivedElements.cpp

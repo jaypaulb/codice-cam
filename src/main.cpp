@@ -27,54 +27,54 @@ int main(int argc, char* argv[]) {
     // Test CameraManager
     std::cout << std::endl;
     std::cout << "🎥 Testing CameraManager..." << std::endl;
-    
+
     CameraManager camera(0, 640, 480);
-    
+
     if (!camera.initialize()) {
         std::cerr << "❌ Failed to initialize camera" << std::endl;
         SDL_Quit();
         return -1;
     }
-    
+
     std::cout << "📹 Camera initialized successfully" << std::endl;
     std::cout << "📐 Frame size: " << camera.getFrameSize().width << "x" << camera.getFrameSize().height << std::endl;
-    
+
     // Test frame capture
     int frame_count = 0;
     auto start_time = std::chrono::steady_clock::now();
-    
+
     auto frame_callback = [&frame_count, &start_time](const cv::Mat& frame) {
         frame_count++;
-        
+
         // Print frame info every 30 frames (about 1 second at 30fps)
         if (frame_count % 30 == 0) {
             auto current_time = std::chrono::steady_clock::now();
             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - start_time).count();
             double fps = (frame_count * 1000.0) / elapsed;
-            
-            std::cout << "📊 Frames captured: " << frame_count 
+
+            std::cout << "📊 Frames captured: " << frame_count
                       << ", FPS: " << std::fixed << std::setprecision(1) << fps << std::endl;
         }
-        
-        // Stop after 5 seconds of capture
-        if (frame_count >= 150) { // 150 frames at ~30fps = 5 seconds
+
+        // Stop after 5 seconds of capture (150 frames at 30fps = 5 seconds)
+        if (frame_count >= 150) {
             return;
         }
     };
-    
+
     if (!camera.startCapture(frame_callback)) {
         std::cerr << "❌ Failed to start camera capture" << std::endl;
         SDL_Quit();
         return -1;
     }
-    
+
     // Wait for capture to complete
     while (camera.isCapturing() && frame_count < 150) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    
+
     camera.stopCapture();
-    
+
     std::cout << std::endl;
     std::cout << "🎯 CameraManager test completed!" << std::endl;
     std::cout << "✅ Total frames captured: " << frame_count << std::endl;
