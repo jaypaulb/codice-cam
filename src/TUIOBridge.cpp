@@ -22,6 +22,8 @@ TUIOBridge::TUIOBridge()
     , total_objects_updated_(0)
     , total_objects_removed_(0)
     , start_time_(std::chrono::steady_clock::now())
+    , total_detected_(0)
+    , total_lost_(0)
 {
 }
 
@@ -119,29 +121,68 @@ void TUIOBridge::updateMarkers(const std::vector<CodiceMarker>& markers) {
             }
             
             int session_id = generateSessionId(marker.id);
+            bool is_new_marker = (last_markers_.find(marker.id) == last_markers_.end());
             
-            if (active_objects_.find(session_id) != active_objects_.end()) {
-                // Update existing object
-                auto obj = active_objects_[session_id];
-                tuio_server_->updateTuioObject(obj, marker.x, marker.y, marker.angle);
-                total_objects_updated_++;
-            } else {
+            if (is_new_marker) {
                 // Create new object using TuioServer's addTuioObject method
                 // Direct mapping: Codice marker ID -> TUIO symbol ID
                 auto obj = tuio_server_->addTuioObject(marker.id, marker.x, marker.y, marker.angle);
                 if (obj) {
                     active_objects_[session_id] = obj;
                     total_objects_created_++;
+                    
+                    // Handle lifecycle: DETECTED
+                    CodiceMarker lifecycle_marker = marker;
+                    lifecycle_marker.state = MarkerState::DETECTED;
+                    lifecycle_marker.first_detected = std::chrono::steady_clock::now();
+                    lifecycle_marker.update_count = 0;
+                    handleStateTransition(marker.id, MarkerState::DETECTED, lifecycle_marker);
                 }
+            } else {
+                // Update existing object
+                auto obj = active_objects_[session_id];
+                tuio_server_->updateTuioObject(obj, marker.x, marker.y, marker.angle);
+                total_objects_updated_++;
+                
+                // Handle lifecycle: UPDATED
+                CodiceMarker lifecycle_marker = marker;
+                lifecycle_marker.state = MarkerState::UPDATED;
+                auto last_marker_it = last_markers_.find(marker.id);
+                if (last_marker_it != last_markers_.end()) {
+                    lifecycle_marker.update_count = last_marker_it->second.update_count + 1;
+                } else {
+                    lifecycle_marker.update_count = 1;
+                }
+                handleStateTransition(marker.id, MarkerState::UPDATED, lifecycle_marker);
             }
             
-            // Update last seen time
-            last_markers_[marker.id] = marker;
+            // Update last seen time and state
+            CodiceMarker updated_marker = marker;
+            updated_marker.state = is_new_marker ? MarkerState::DETECTED : MarkerState::ACTIVE;
+            if (is_new_marker) {
+                updated_marker.first_detected = std::chrono::steady_clock::now();
+                updated_marker.update_count = 0;
+            } else {
+                auto last_marker_it = last_markers_.find(marker.id);
+                if (last_marker_it != last_markers_.end()) {
+                    updated_marker.first_detected = last_marker_it->second.first_detected;
+                    updated_marker.update_count = last_marker_it->second.update_count + 1;
+                } else {
+                    updated_marker.first_detected = std::chrono::steady_clock::now();
+                    updated_marker.update_count = 1;
+                }
+            }
+            last_markers_[marker.id] = updated_marker;
         }
         
         // Remove markers that are no longer detected
         std::vector<int> to_remove;
         for (const auto& [session_id, obj] : active_objects_) {
+            if (obj == nullptr) {
+                std::cerr << "⚠️  Found null object in active_objects_ for session " << session_id << std::endl;
+                to_remove.push_back(session_id);
+                continue;
+            }
             int marker_id = obj->getSymbolID();
             if (current_marker_ids.find(marker_id) == current_marker_ids.end()) {
                 to_remove.push_back(session_id);
@@ -150,6 +191,22 @@ void TUIOBridge::updateMarkers(const std::vector<CodiceMarker>& markers) {
         
         for (int session_id : to_remove) {
             auto obj = active_objects_[session_id];
+            if (obj == nullptr) {
+                std::cerr << "⚠️  Skipping null object removal for session " << session_id << std::endl;
+                active_objects_.erase(session_id);
+                continue;
+            }
+            
+            int marker_id = obj->getSymbolID();
+            
+            // Handle lifecycle: LOST
+            auto last_marker_it = last_markers_.find(marker_id);
+            if (last_marker_it != last_markers_.end()) {
+                CodiceMarker lost_marker = last_marker_it->second;
+                lost_marker.state = MarkerState::LOST;
+                handleStateTransition(marker_id, MarkerState::LOST, lost_marker);
+            }
+            
             tuio_server_->removeTuioObject(obj);
             active_objects_.erase(session_id);
             total_objects_removed_++;
@@ -254,6 +311,113 @@ std::map<int, int> TUIOBridge::getActiveMappings() const {
     }
     
     return mappings;
+}
+
+void TUIOBridge::setLifecycleCallback(std::function<void(int marker_id, MarkerState state, const CodiceMarker& marker)> callback) {
+    lifecycle_callback_ = callback;
+}
+
+std::string TUIOBridge::getLifecycleStatistics() const {
+    std::ostringstream oss;
+    oss << "Lifecycle Statistics:\n";
+    oss << "  Total Detected: " << total_detected_ << "\n";
+    oss << "  Total Lost: " << total_lost_ << "\n";
+    oss << "  Currently Active: " << active_objects_.size() << "\n";
+    oss << "  Objects Created: " << total_objects_created_ << "\n";
+    oss << "  Objects Updated: " << total_objects_updated_ << "\n";
+    oss << "  Objects Removed: " << total_objects_removed_ << "\n";
+    
+    // State distribution
+    std::map<MarkerState, int> state_counts;
+    for (const auto& [marker_id, state] : marker_states_) {
+        state_counts[state]++;
+    }
+    
+    oss << "  State Distribution:\n";
+    for (const auto& [state, count] : state_counts) {
+        oss << "    " << getStateName(state) << ": " << count << "\n";
+    }
+    
+    return oss.str();
+}
+
+std::string TUIOBridge::getMarkerLifecycleHistory(int marker_id) const {
+    std::ostringstream oss;
+    oss << "Lifecycle History for Marker ID " << marker_id << ":\n";
+    
+    auto history_it = marker_history_.find(marker_id);
+    if (history_it == marker_history_.end()) {
+        oss << "  No history found for this marker\n";
+        return oss.str();
+    }
+    
+    const auto& history = history_it->second;
+    for (const auto& [state, timestamp] : history) {
+        auto time_since_epoch = std::chrono::duration_cast<std::chrono::milliseconds>(
+            timestamp.time_since_epoch()).count();
+        oss << "  " << getStateName(state) << " at " << time_since_epoch << "ms\n";
+    }
+    
+    return oss.str();
+}
+
+bool TUIOBridge::transitionMarkerState(int marker_id, MarkerState new_state) {
+    auto state_it = marker_states_.find(marker_id);
+    if (state_it == marker_states_.end()) {
+        std::cerr << "❌ Marker " << marker_id << " not found for state transition" << std::endl;
+        return false;
+    }
+    
+    MarkerState old_state = state_it->second;
+    marker_states_[marker_id] = new_state;
+    addToHistory(marker_id, new_state);
+    
+    std::cout << "🔄 Marker " << marker_id << " transitioned from " 
+              << getStateName(old_state) << " to " << getStateName(new_state) << std::endl;
+    
+    return true;
+}
+
+void TUIOBridge::handleStateTransition(int marker_id, MarkerState new_state, const CodiceMarker& marker) {
+    // Update state
+    marker_states_[marker_id] = new_state;
+    
+    // Add to history
+    addToHistory(marker_id, new_state);
+    
+    // Update statistics
+    if (new_state == MarkerState::DETECTED) {
+        total_detected_++;
+    } else if (new_state == MarkerState::LOST) {
+        total_lost_++;
+    }
+    
+    // Call callback if set
+    if (lifecycle_callback_) {
+        lifecycle_callback_(marker_id, new_state, marker);
+    }
+    
+    std::cout << "🔄 Marker " << marker_id << " -> " << getStateName(new_state) << std::endl;
+}
+
+void TUIOBridge::addToHistory(int marker_id, MarkerState state) {
+    auto now = std::chrono::steady_clock::now();
+    marker_history_[marker_id].push_back({state, now});
+    
+    // Keep only last 10 history entries per marker
+    if (marker_history_[marker_id].size() > 10) {
+        marker_history_[marker_id].pop_front();
+    }
+}
+
+std::string TUIOBridge::getStateName(MarkerState state) const {
+    switch (state) {
+        case MarkerState::DETECTED: return "DETECTED";
+        case MarkerState::ACTIVE: return "ACTIVE";
+        case MarkerState::UPDATED: return "UPDATED";
+        case MarkerState::LOST: return "LOST";
+        default: return "UNKNOWN";
+    }
 }
 
 int TUIOBridge::generateSessionId(int marker_id) const {

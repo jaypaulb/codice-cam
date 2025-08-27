@@ -5,6 +5,8 @@
 #include <vector>
 #include <map>
 #include <chrono>
+#include <functional>
+#include <list>
 
 // Include TUIO headers
 #include "TuioServer.h"
@@ -14,7 +16,17 @@
 namespace CodiceCam {
 
 /**
- * @brief Represents a detected Codice marker
+ * @brief Represents the lifecycle state of a Codice marker
+ */
+enum class MarkerState {
+    DETECTED,    // Marker was just detected
+    ACTIVE,      // Marker is active and being tracked
+    UPDATED,     // Marker position/angle was updated
+    LOST         // Marker was lost/removed
+};
+
+/**
+ * @brief Represents a detected Codice marker with lifecycle information
  */
 struct CodiceMarker {
     int id;                    // Codice marker ID (0-4095)
@@ -23,6 +35,9 @@ struct CodiceMarker {
     float angle;              // Rotation angle in radians
     std::chrono::steady_clock::time_point last_seen;  // Last detection time
     int session_id;           // TUIO session ID
+    MarkerState state;        // Current lifecycle state
+    std::chrono::steady_clock::time_point first_detected;  // First detection time
+    int update_count;         // Number of updates since detection
 };
 
 /**
@@ -117,6 +132,33 @@ public:
      * @return Map of marker ID to session ID
      */
     std::map<int, int> getActiveMappings() const;
+    
+    /**
+     * @brief Set callback for marker lifecycle events
+     * @param callback Function to call on lifecycle events
+     */
+    void setLifecycleCallback(std::function<void(int marker_id, MarkerState state, const CodiceMarker& marker)> callback);
+    
+    /**
+     * @brief Get lifecycle statistics
+     * @return Lifecycle statistics string
+     */
+    std::string getLifecycleStatistics() const;
+    
+    /**
+     * @brief Get marker lifecycle history
+     * @param marker_id Codice marker ID
+     * @return Lifecycle history string
+     */
+    std::string getMarkerLifecycleHistory(int marker_id) const;
+    
+    /**
+     * @brief Force marker state transition
+     * @param marker_id Codice marker ID
+     * @param new_state New state to transition to
+     * @return true if transition successful, false otherwise
+     */
+    bool transitionMarkerState(int marker_id, MarkerState new_state);
 
 private:
     std::unique_ptr<TUIO::TuioServer> tuio_server_;
@@ -133,6 +175,13 @@ private:
     int total_objects_updated_;
     int total_objects_removed_;
     std::chrono::steady_clock::time_point start_time_;
+    
+    // Lifecycle management
+    std::function<void(int marker_id, MarkerState state, const CodiceMarker& marker)> lifecycle_callback_;
+    std::map<int, std::list<std::pair<MarkerState, std::chrono::steady_clock::time_point>>> marker_history_;
+    std::map<int, MarkerState> marker_states_;
+    int total_detected_;
+    int total_lost_;
     
     /**
      * @brief Generate unique session ID for a marker
@@ -166,6 +215,28 @@ private:
      * @brief Clean up expired markers
      */
     void cleanupExpiredMarkers();
+    
+    /**
+     * @brief Handle marker state transition
+     * @param marker_id Codice marker ID
+     * @param new_state New state
+     * @param marker Marker data
+     */
+    void handleStateTransition(int marker_id, MarkerState new_state, const CodiceMarker& marker);
+    
+    /**
+     * @brief Add marker to history
+     * @param marker_id Codice marker ID
+     * @param state Marker state
+     */
+    void addToHistory(int marker_id, MarkerState state);
+    
+    /**
+     * @brief Get state name as string
+     * @param state Marker state
+     * @return State name string
+     */
+    std::string getStateName(MarkerState state) const;
     
 
 };
