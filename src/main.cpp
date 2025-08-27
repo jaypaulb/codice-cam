@@ -6,18 +6,18 @@ int main(int argc, char* argv[]) {
     std::cout << "🚀 Codice-Cam v1.0.0" << std::endl;
     std::cout << "Webcam-based Codice Marker Detection for TUIO" << std::endl;
     std::cout << std::endl;
-    
+
     // Test OpenCV
     std::cout << "📷 OpenCV Version: " << CV_VERSION << std::endl;
-    
+
     // Test SDL2
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         std::cerr << "❌ SDL2 initialization failed: " << SDL_GetError() << std::endl;
         return 1;
     }
-    
+
     std::cout << "✅ SDL2 initialized successfully" << std::endl;
-    
+
     // Test camera availability
     cv::VideoCapture cap(0);
     if (!cap.isOpened()) {
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
         std::cout << "📹 Camera detected and ready" << std::endl;
         cap.release();
     }
-    
+
     std::cout << std::endl;
     std::cout << "🎯 Development environment is ready!" << std::endl;
     std::cout << "Next steps:" << std::endl;
@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
     std::cout << "2. Develop marker detection algorithm" << std::endl;
     std::cout << "3. Integrate TUIO protocol" << std::endl;
     std::cout << "4. Create user interface" << std::endl;
-    
+
     SDL_Quit();
     return 0;
 }

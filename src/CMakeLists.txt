@@ -1,8 +1,19 @@
 # Source files for CodiceCam
 
 # Find required packages
-find_package(OpenCV REQUIRED)
-find_package(SDL2 REQUIRED)
+if(USE_SYSTEM_PACKAGES)
+    # Use system packages
+    find_package(OpenCV REQUIRED)
+    find_package(SDL2 REQUIRED)
+    set(OPENCV_LIBS ${OpenCV_LIBS})
+    set(SDL2_LIBS SDL2::SDL2)
+else()
+    # Use vcpkg packages
+    find_package(OpenCV REQUIRED)
+    find_package(SDL2 REQUIRED)
+    set(OPENCV_LIBS ${OpenCV_LIBS})
+    set(SDL2_LIBS SDL2::SDL2)
+endif()
 
 # Source files (to be added as we develop)
 set(SOURCES
@@ -27,9 +38,9 @@ set(HEADERS
 add_executable(CodiceCam ${SOURCES} ${HEADERS})
 
 # Link libraries
-target_link_libraries(CodiceCam 
-    ${OpenCV_LIBS}
-    SDL2::SDL2
+target_link_libraries(CodiceCam
+    ${OPENCV_LIBS}
+    ${SDL2_LIBS}
     # TUIO library will be added here
 )
 

@@ -1,10 +1,10 @@
 #!/bin/bash
-# Setup script for Codice-Cam development environment on Linux
-# This script sets up cross-platform development for Linux -> Windows deployment
+# Simple setup script for Codice-Cam development environment
+# Uses system packages instead of vcpkg for faster setup
 
 set -e  # Exit on any error
 
-echo "🚀 Setting up Codice-Cam development environment..."
+echo "🚀 Setting up Codice-Cam development environment (Simple mode)..."
 
 # Check if running on Linux
 if [[ "$OSTYPE" != "linux-gnu"* ]]; then
@@ -45,47 +45,11 @@ sudo apt install -y \
     libgtk-3-dev \
     libavcodec-dev \
     libavformat-dev \
-    libswscale-dev
-
-# Create vcpkg directory
-VCPKG_DIR="$(pwd)/vcpkg"
-if [ ! -d "$VCPKG_DIR" ]; then
-    echo "📥 Cloning vcpkg..."
-    git clone https://github.com/Microsoft/vcpkg.git "$VCPKG_DIR"
-    cd "$VCPKG_DIR"
-    ./bootstrap-vcpkg.sh
-    cd ..
-else
-    echo "✅ vcpkg already exists, updating..."
-    cd "$VCPKG_DIR"
-    git pull
-    ./bootstrap-vcpkg.sh
-    cd ..
-fi
-
-# Install Linux packages (skip if system packages are available)
-echo "🐧 Installing Linux packages via vcpkg..."
-echo "Note: This may take a while. You can skip this step if system packages work."
-read -p "Install vcpkg packages for Linux? (y/N): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    "$VCPKG_DIR/vcpkg" install \
-        opencv4:x64-linux \
-        sdl2:x64-linux \
-        sdl2-image:x64-linux
-fi
-
-# Install Windows packages for cross-compilation
-echo "🪟 Installing Windows packages for cross-compilation..."
-echo "This is required for Windows deployment."
-read -p "Install vcpkg packages for Windows? (Y/n): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-    "$VCPKG_DIR/vcpkg" install \
-        opencv4:x64-mingw-dynamic \
-        sdl2:x64-mingw-dynamic \
-        sdl2-image:x64-mingw-dynamic
-fi
+    libswscale-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff-dev \
+    libwebp-dev
 
 # Create build directories
 echo "📁 Creating build directories..."
@@ -95,37 +59,36 @@ mkdir -p build-windows
 # Create build scripts
 echo "📝 Creating build scripts..."
 
-# Linux build script
+# Linux build script (using system packages)
 cat > build-linux.sh << 'EOF'
 #!/bin/bash
 set -e
 
-echo "🐧 Building for Linux development..."
+echo "🐧 Building for Linux development (using system packages)..."
 mkdir -p build-linux
 cd build-linux
 
 cmake .. \
-    -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake \
     -DCMAKE_BUILD_TYPE=Debug \
-    -DVCPKG_TARGET_TRIPLET=x64-linux
+    -DUSE_SYSTEM_PACKAGES=ON
 
 make -j$(nproc)
 echo "✅ Linux build complete!"
 EOF
 
-# Windows build script
+# Windows build script (using system packages)
 cat > build-windows.sh << 'EOF'
 #!/bin/bash
 set -e
 
-echo "🪟 Building for Windows deployment..."
+echo "🪟 Building for Windows deployment (using system packages)..."
 mkdir -p build-windows
 cd build-windows
 
 cmake .. \
-    -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake \
     -DCMAKE_BUILD_TYPE=Release \
-    -DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic
+    -DCMAKE_TOOLCHAIN_FILE=../cmake/toolchain-mingw.cmake \
+    -DUSE_SYSTEM_PACKAGES=ON
 
 make -j$(nproc)
 echo "✅ Windows build complete!"
@@ -136,10 +99,11 @@ chmod +x build-linux.sh build-windows.sh
 
 # Create development configuration
 echo "⚙️ Creating development configuration..."
+mkdir -p .vscode
 cat > .vscode/settings.json << 'EOF'
 {
     "cmake.configureArgs": [
-        "-DCMAKE_TOOLCHAIN_FILE=${workspaceFolder}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        "-DUSE_SYSTEM_PACKAGES=ON"
     ],
     "cmake.buildDirectory": "${workspaceFolder}/build-linux",
     "cmake.generator": "Unix Makefiles",
@@ -150,6 +114,7 @@ EOF
 
 # Create CMake toolchain file for cross-compilation
 echo "🔧 Creating CMake toolchain file..."
+mkdir -p cmake
 cat > cmake/toolchain-mingw.cmake << 'EOF'
 # MinGW-w64 cross-compilation toolchain
 set(CMAKE_SYSTEM_NAME Windows)
@@ -177,7 +142,7 @@ set(CMAKE_RANLIB x86_64-w64-mingw32-ranlib)
 EOF
 
 echo ""
-echo "🎉 Development environment setup complete!"
+echo "🎉 Simple development environment setup complete!"
 echo ""
 echo "📋 Next steps:"
 echo "1. Run './build-linux.sh' to build for Linux development"
@@ -187,7 +152,9 @@ echo ""
 echo "🔧 Available commands:"
 echo "  ./build-linux.sh    - Build for Linux development"
 echo "  ./build-windows.sh  - Build for Windows deployment"
-echo "  ./vcpkg/vcpkg list  - List installed packages"
+echo ""
+echo "💡 Note: This setup uses system packages for faster installation."
+echo "   For production builds, consider using vcpkg for better dependency management."
 echo ""
 echo "📚 Documentation:"
 echo "  - PRD.md: Product requirements"

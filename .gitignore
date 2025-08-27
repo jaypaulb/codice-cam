@@ -97,7 +97,38 @@ coverage/
 # Package managers
 vcpkg_installed/
 packages/
+vcpkg/
+vcpkg-*.log
+
+# Build artifacts
+build-linux/
+build-windows/
+build/
+out/
+bin/
+lib/
+
+# Cross-compilation artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
 
 # Documentation build
 docs/_build/
 docs/build/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Cursor AI files (keep rules but exclude cache/indexing)
+.cursor/
+!.cursor/rules/
+.cursor/cache/
+.cursor/index/
+.cursor/logs/
