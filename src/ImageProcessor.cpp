@@ -60,10 +60,24 @@ bool ImageProcessor::findMarkerContours(const cv::Mat& processed_frame, std::vec
         // Find all contours
         std::vector<cv::Vec4i> hierarchy;
         cv::findContours(processed_frame, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+        
+        std::cout << "🔍 [DEBUG] Found " << contours.size() << " raw contours" << std::endl;
+
+        // Limit the number of contours to process to prevent hanging
+        const int MAX_CONTOURS_TO_PROCESS = 1000;
+        if (contours.size() > MAX_CONTOURS_TO_PROCESS) {
+            std::cout << "⚠️ [DEBUG] Too many contours (" << contours.size() << "), limiting to " << MAX_CONTOURS_TO_PROCESS << std::endl;
+            contours.resize(MAX_CONTOURS_TO_PROCESS);
+        }
 
         // Filter contours based on size and shape criteria
         std::vector<std::vector<cv::Point>> filtered_contours;
+        int processed_count = 0;
         for (const auto& contour : contours) {
+            processed_count++;
+            if (processed_count % 100 == 0) {
+                std::cout << "🔍 [DEBUG] Processed " << processed_count << "/" << contours.size() << " contours" << std::endl;
+            }
             if (filterContour(contour)) {
                 filtered_contours.push_back(contour);
             }
@@ -150,9 +164,10 @@ cv::Mat ImageProcessor::detectEdges(const cv::Mat& grayscale_frame) {
     // Apply Canny edge detection
     cv::Canny(grayscale_frame, edges, canny_low_threshold_, canny_high_threshold_);
 
-    // Apply morphological operations to close gaps
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-    cv::morphologyEx(edges, edges, cv::MORPH_CLOSE, kernel);
+    // Apply minimal morphological operations to preserve square corners
+    // Use smaller kernel to close small gaps without distorting square shapes
+    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(2, 2));
+    cv::morphologyEx(edges, edges, cv::MORPH_CLOSE, kernel, cv::Point(-1,-1), 1);
 
     return edges;
 }
@@ -178,16 +193,41 @@ bool ImageProcessor::filterContour(const std::vector<cv::Point>& contour) const 
     std::vector<cv::Point> approx;
     cv::approxPolyDP(contour, approx, 0.02 * perimeter, true);
 
-    // Codice markers should be roughly square/rectangular (4 corners)
-    if (approx.size() < 4 || approx.size() > 8) {
-        return false;
+    // Codice markers are ALWAYS perfect squares with EXACTLY 4 corners
+    if (approx.size() != 4) {
+        return false; // Reject all multi-corner shapes - markers are always square
     }
 
-    // Check aspect ratio (should be roughly square)
+    // Check aspect ratio (must be very close to square)
     cv::Rect bounding_rect = cv::boundingRect(contour);
     double aspect_ratio = static_cast<double>(bounding_rect.width) / bounding_rect.height;
-    if (aspect_ratio < 0.5 || aspect_ratio > 2.0) {
-        return false;
+    if (aspect_ratio < 0.8 || aspect_ratio > 1.25) {
+        return false; // Much stricter square requirement
+    }
+
+    // Additional square validation: check corner angles
+    // For a proper square, internal angles should be close to 90 degrees
+    for (size_t i = 0; i < 4; i++) {
+        cv::Point p1 = approx[i];
+        cv::Point p2 = approx[(i + 1) % 4];
+        cv::Point p3 = approx[(i + 2) % 4];
+
+        // Calculate vectors
+        cv::Point v1 = p1 - p2;
+        cv::Point v2 = p3 - p2;
+
+        // Calculate angle using dot product
+        double dot = v1.x * v2.x + v1.y * v2.y;
+        double mag1 = sqrt(v1.x * v1.x + v1.y * v1.y);
+        double mag2 = sqrt(v2.x * v2.x + v2.y * v2.y);
+
+        if (mag1 > 0 && mag2 > 0) {
+            double angle = acos(std::abs(dot) / (mag1 * mag2)) * 180.0 / CV_PI;
+            // Allow some tolerance for real-world conditions (70-110 degrees)
+            if (angle < 70 || angle > 110) {
+                return false; // Corner angle too far from 90 degrees
+            }
+        }
     }
 
     return true;

@@ -21,6 +21,7 @@ set(SOURCES
     CameraManager.cpp
     ImageProcessor.cpp
     MarkerDetector.cpp
+    DebugViewer.cpp
     # CodiceDecoder.cpp
     TUIOBridge.cpp
     TUIOConfig.cpp

@@ -43,8 +43,8 @@ bool CameraManager::initialize() {
     cap_->set(cv::CAP_PROP_FRAME_WIDTH, width_);
     cap_->set(cv::CAP_PROP_FRAME_HEIGHT, height_);
 
-    // Set target FPS to 30
-    cap_->set(cv::CAP_PROP_FPS, 30.0);
+    // Set target FPS to 15 for higher resolution processing
+    cap_->set(cv::CAP_PROP_FPS, 15.0);
 
     // Verify actual dimensions and FPS
     int actual_width = static_cast<int>(cap_->get(cv::CAP_PROP_FRAME_WIDTH));
@@ -155,7 +155,7 @@ bool CameraManager::isAvailable() const {
 void CameraManager::captureLoop() {
     cv::Mat frame;
     auto last_frame_time = std::chrono::steady_clock::now();
-    const auto target_frame_duration = std::chrono::milliseconds(33); // ~30 FPS (1000ms/30fps = 33.33ms)
+    const auto target_frame_duration = std::chrono::milliseconds(67); // ~15 FPS (1000ms/15fps = 66.67ms)
 
     while (capturing_) {
         auto frame_start_time = std::chrono::steady_clock::now();

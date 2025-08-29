@@ -1,20 +1,14 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
-#include <SDL2/SDL.h>
-#include "CameraManager.h"
-#include "MarkerDetector.h"
-// #include "DebugViewer.h"  // Not needed for simplified approach
+#include <vector>
 #include <chrono>
 #include <thread>
-#include <iomanip>
 
-using namespace CodiceCam;
-
-int main(int argc, char* argv[]) {
-    std::cout << "🧪 Minimal Debug Window Test (Integrated)" << std::endl;
+int main() {
+    std::cout << "🧪 Minimal Debug Window Test" << std::endl;
     std::cout << "Testing camera + contour detection + OpenCV window" << std::endl;
 
-    // Open camera (same as minimal test)
+    // Open camera
     cv::VideoCapture cap(2);
     if (!cap.isOpened()) {
         std::cerr << "❌ Failed to open camera" << std::endl;
@@ -28,14 +22,13 @@ int main(int argc, char* argv[]) {
 
     std::cout << "📹 Camera opened successfully" << std::endl;
 
-    // Create window (same as minimal test)
-    cv::namedWindow("Codice Debug Viewer", cv::WINDOW_AUTOSIZE);
-    std::cout << "🖥️ Debug window created" << std::endl;
+    // Create window
+    cv::namedWindow("Minimal Debug Test", cv::WINDOW_AUTOSIZE);
+    std::cout << "🖥️ Window created" << std::endl;
 
     int frame_count = 0;
     auto start_time = std::chrono::steady_clock::now();
 
-    // Main processing loop (same as minimal test)
     while (frame_count < 300) { // 10 seconds at 30fps
         cv::Mat frame;
         if (!cap.read(frame)) {
@@ -50,25 +43,31 @@ int main(int argc, char* argv[]) {
 
         frame_count++;
 
-        // Convert to color if needed
+        // Clone frame for processing
         cv::Mat display_frame = frame.clone();
+
+        // Convert to color if needed
         if (display_frame.channels() == 1) {
             cv::cvtColor(display_frame, display_frame, cv::COLOR_GRAY2BGR);
         }
 
-        // Simple contour detection (same as minimal test)
+        // Simple contour detection (minimal version)
         cv::Mat gray;
         cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+
+        // Simple blur and threshold
         cv::GaussianBlur(gray, gray, cv::Size(3, 3), 0);
         cv::Mat binary;
         cv::threshold(gray, binary, 100, 255, cv::THRESH_BINARY);
 
+        // Find contours
         std::vector<std::vector<cv::Point>> contours;
         std::vector<cv::Vec4i> hierarchy;
         cv::findContours(binary, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
         // Draw contours in yellow
         for (size_t i = 0; i < contours.size(); i++) {
+            // Only draw contours that look like potential markers (4 corners)
             std::vector<cv::Point> approx;
             double perimeter = cv::arcLength(contours[i], true);
             cv::approxPolyDP(contours[i], approx, 0.02 * perimeter, true);
@@ -84,15 +83,8 @@ int main(int argc, char* argv[]) {
         cv::putText(display_frame, info, cv::Point(10, 30),
                    cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(255, 255, 255), 2);
 
-        // Add legend
-        int legend_y = display_frame.rows - 60;
-        cv::putText(display_frame, "Legend:", cv::Point(10, legend_y),
-                   cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
-        cv::putText(display_frame, "Yellow: 4-corner candidates", cv::Point(10, legend_y + 15),
-                   cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(0, 255, 255), 1);
-
-        // Display frame (same as minimal test)
-        cv::imshow("Codice Debug Viewer", display_frame);
+        // Display frame
+        cv::imshow("Minimal Debug Test", display_frame);
 
         // Handle window events
         int key = cv::waitKey(1);

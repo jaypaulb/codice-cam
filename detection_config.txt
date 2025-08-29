@@ -1,0 +1,33 @@
+# Codice Marker Detection Configuration
+# You can modify these values to tune the detection sensitivity
+
+# Camera Settings
+camera_width=1920               # Camera resolution width (Full HD per PRD requirement)
+camera_height=1080              # Camera resolution height (Full HD per PRD requirement)
+camera_fps=15                   # Target FPS (lower FPS allows higher resolution)
+
+# Image Processing Parameters (enhanced for better marker detection)
+blur_kernel_size=1          # Gaussian blur (1=no blur, 3,5,7,9 for more blur)
+contrast_alpha=1.5          # Increased contrast enhancement for better edge definition
+brightness_beta=30          # Increased brightness offset for better visibility
+
+# Edge Detection Parameters (balanced for good detection with tight boundaries)
+canny_low_threshold=40      # Moderate threshold to catch good markers but reduce noise
+canny_high_threshold=130    # Balanced threshold for clean contours
+
+# Contour Filtering Parameters (further relaxed for small markers)
+min_contour_area=500        # Further reduced minimum area for very small markers
+max_contour_area=500000     # Increased maximum area for larger markers
+min_contour_perimeter=50    # Reduced minimum perimeter for small markers
+
+# Marker Size Validation (relaxed to catch smaller markers)
+min_marker_size=50          # Reduced minimum size to catch smaller markers
+max_marker_size=1000        # Increased maximum size for larger markers
+min_confidence=0.6          # Minimum confidence for marker acceptance
+
+# Polygon Approximation (balanced for good detection with tight boundaries)
+epsilon_factor=0.019        # Slightly relaxed from 0.018 to allow good markers through
+
+# Debug Options
+debug_mode=true             # Enable/disable debug output and image saving
+verbose_mode=false          # Enable/disable verbose console output

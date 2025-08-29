@@ -14,10 +14,11 @@ struct CodiceMarker {
     int id;                    // Decoded marker ID (0-4095 for 4x4 markers)
     cv::Point2f center;        // Center point of the marker
     float angle;               // Rotation angle in degrees
+    float deskew_angle;        // Amount of deskew needed (for tracking actual orientation)
     std::vector<cv::Point2f> corners;  // Four corner points
     double confidence;         // Detection confidence (0.0-1.0)
 
-    CodiceMarker() : id(-1), angle(0.0), confidence(0.0) {}
+    CodiceMarker() : id(-1), angle(0.0), deskew_angle(0.0), confidence(0.0) {}
 };
 
 /**
@@ -45,6 +46,7 @@ public:
      * @return true if detection successful, false otherwise
      */
     bool detectMarkers(const cv::Mat& frame, std::vector<CodiceMarker>& markers);
+    bool detectMarkers(const cv::Mat& original_frame, const cv::Mat& processed_frame, std::vector<CodiceMarker>& markers);
 
     /**
      * @brief Set detection parameters
@@ -59,6 +61,12 @@ public:
      * @param enable true to enable debug output, false to disable
      */
     void setDebugMode(bool enable);
+
+    /**
+     * @brief Enable/disable live debug window
+     * @param enable true to show live debug window, false to disable
+     */
+    void setDebugWindow(bool enable);
 
     /**
      * @brief Enable/disable verbose logging
@@ -89,6 +97,7 @@ private:
     int max_marker_size_;
     double min_confidence_;
     bool debug_mode_;
+    bool debug_window_enabled_;
     bool verbose_mode_;
     bool quiet_mode_;  // Suppress most debug output
 
@@ -97,13 +106,18 @@ private:
     mutable int total_markers_detected_;
     mutable int total_detection_attempts_;
 
+    // Location-based deduplication for debug images
+    std::vector<cv::Point2f> previous_marker_locations_;
+    double location_change_threshold_;  // Minimum distance to consider location "changed"
+
     // Internal detection methods
-    bool processContour(const std::vector<cv::Point>& contour, CodiceMarker& marker);
+    bool processContour(const std::vector<cv::Point>& contour, const cv::Mat& original_frame, CodiceMarker& marker, const std::string& timestamp = "", int marker_index = -1);
     std::vector<cv::Point2f> sortCornersForMarker(const std::vector<cv::Point2f>& corners);
-    bool extractAndDeskewMarker(const cv::Mat& frame, const std::vector<cv::Point2f>& corners, cv::Mat& marker_region);
+    bool extractAndDeskewMarker(const cv::Mat& frame, const std::vector<cv::Point2f>& corners, cv::Mat& marker_region, float& deskew_angle, const std::string& timestamp = "", int marker_index = -1);
     bool extractMarkerRegion(const cv::Mat& frame, const std::vector<cv::Point2f>& corners, cv::Mat& marker_region);
-    bool decodeMarker(const cv::Mat& marker_region, int& marker_id, double& confidence);
+    bool decodeMarker(const cv::Mat& marker_region, int& marker_id, double& confidence, const std::string& timestamp = "", int marker_index = -1);
     bool validateMarkerPattern(const cv::Mat& binary_marker, int& marker_id, double& confidence);
+    bool hasLocationChanged(const std::vector<CodiceMarker>& current_markers);
 
     /**
      * @brief Perspective transform to get square marker view
@@ -129,6 +143,16 @@ private:
      * @brief Draw debug visualization
      */
     void drawDebugInfo(cv::Mat& frame, const std::vector<CodiceMarker>& markers);
+
+    /**
+     * @brief Draw all contours and detection attempts for debugging
+     */
+    void drawAllContoursDebug(cv::Mat& frame, const std::vector<std::vector<cv::Point>>& contours);
+
+    /**
+     * @brief Draw live debug window with overlay information
+     */
+    void drawLiveDebugWindow(const cv::Mat& frame, const std::vector<std::vector<cv::Point>>& contours, const std::vector<CodiceMarker>& markers);
 };
 
 } // namespace CodiceCam

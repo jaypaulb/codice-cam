@@ -20,10 +20,10 @@ public:
     /**
      * @brief Constructor
      * @param device_id Camera device ID (default: 0)
-     * @param width Desired frame width (default: 640)
-     * @param height Desired frame height (default: 480)
+     * @param width Desired frame width (default: 1920)
+     * @param height Desired frame height (default: 1080)
      */
-    CameraManager(int device_id = 0, int width = 640, int height = 480);
+    CameraManager(int device_id = 0, int width = 1920, int height = 1080);
 
     /**
      * @brief Destructor
